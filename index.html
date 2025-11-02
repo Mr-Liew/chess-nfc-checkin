@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Commonwealth Chess Championship 2025</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial;
+      text-align: center;
+      background: #eef3fb;
+      padding: 30px;
+    }
+    h2 { color: #003366; margin-bottom: 10px; }
+    button {
+      padding: 14px 28px;
+      font-size: 1.1em;
+      border-radius: 10px;
+      border: none;
+      background: #0057e7;
+      color: white;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+    .card {
+      margin-top: 25px;
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      display: inline-block;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      min-width: 300px;
+    }
+    .status {
+      font-size: 2em;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+    .in { color: green; }
+    .out { color: red; }
+  </style>
+</head>
+<body>
+  <h2>Commonwealth Chess Championship 2025</h2>
+  <p>Tap "Scan NFC" and scan a player's tag.</p>
+  <button id="scanBtn">Scan NFC</button>
+
+  <div id="result" class="card" style="display:none;">
+    <h3 id="name"></h3>
+    <p><b>User ID:</b> <span id="uid"></span></p>
+    <p><b>Nationality:</b> <span id="nat"></span></p>
+    <p><b>Category:</b> <span id="cat"></span></p>
+    <p><b>Time:</b> <span id="time"></span></p>
+    <p class="status" id="status"></p>
+  </div>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/XXXX/exec"; // 👈 Replace with your Apps Script URL
+    const scanBtn = document.getElementById('scanBtn');
+
+    async function startScan() {
+      if (!("NDEFReader" in window)) {
+        alert("⚠️ Web NFC is only supported on Android Chrome.");
+        return;
+      }
+
+      try {
+        const ndef = new NDEFReader();
+        await ndef.scan();
+        scanBtn.innerText = "Scanning...";
+        scanBtn.disabled = true;
+
+        ndef.onreading = async event => {
+          const decoder = new TextDecoder();
+          const userId = decoder.decode(event.message.records[0].data).trim();
+          scanBtn.innerText = "Scan NFC";
+          scanBtn.disabled = false;
+          if (!userId) {
+            alert("Empty NFC tag detected!");
+            return;
+          }
+          getUserData(userId);
+        };
+      } catch (err) {
+        alert("NFC Scan Error: " + err);
+        scanBtn.innerText = "Scan NFC";
+        scanBtn.disabled = false;
+      }
+    }
+
+    async function getUserData(userId) {
+      try {
+        const res = await fetch(`${API_URL}?userId=${encodeURIComponent(userId)}`);
+        const data = await res.json();
+        showResult(data);
+      } catch (err) {
+        alert("Fetch error: " + err);
+      }
+    }
+
+    function showResult(data) {
+      if (data.error) {
+        alert(data.error);
+        return;
+      }
+      document.getElementById("result").style.display = "block";
+      document.getElementById("name").innerText = data.name;
+      document.getElementById("uid").innerText = data.id;
+      document.getElementById("nat").innerText = data.nationality;
+      document.getElementById("cat").innerText = data.category;
+      document.getElementById("time").innerText = data.time;
+      document.getElementById("status").innerText = data.status;
+      document.getElementById("status").className = "status " + (data.status === "In" ? "in" : "out");
+    }
+
+    scanBtn.addEventListener("click", startScan);
+  </script>
+</body>
+</html>
