@@ -11,7 +11,6 @@
       padding: 30px;
     }
     h2 { color: #003366; margin-bottom: 10px; }
-
     button {
       padding: 14px 28px;
       font-size: 1.1em;
@@ -23,7 +22,6 @@
       margin-top: 20px;
     }
     button:disabled { background: #ccc; cursor: not-allowed; }
-
     .card {
       margin-top: 25px;
       background: white;
@@ -31,71 +29,47 @@
       border-radius: 15px;
       display: inline-block;
       box-shadow: 0 0 10px rgba(0,0,0,0.2);
-      min-width: 340px;
+      min-width: 320px;
       text-align: left;
     }
-
-    .profile-box {
+    .profile-container {
       display: flex;
       align-items: center;
-      justify-content: flex-start;
-      gap: 20px;
+      margin-bottom: 15px;
     }
-
     .profile {
-      width: 100px;
-      height: 100px;
+      width: 100px; height: 100px;
       border-radius: 50%;
       object-fit: cover;
-      border: 3px solid #0057e7;
+      margin-right: 15px;
     }
-
-    .info h3 {
-      margin: 0;
-      color: #003366;
-    }
-
-    .info p {
-      margin: 4px 0;
-      font-size: 0.95em;
-      color: #333;
-    }
-
     .flag {
-      width: 40px;
-      height: 30px;
+      width: 40px; height: 30px;
       vertical-align: middle;
       margin-left: 8px;
       border-radius: 4px;
     }
-
     .status {
       font-size: 2em;
       font-weight: bold;
       margin-top: 15px;
       text-align: center;
     }
-
     .in { color: green; }
     .out { color: red; }
-
-    /* Loading spinner */
-    #loading {
-      display: none;
-      margin-top: 30px;
-    }
-
+    /* Spinner styling */
     .spinner {
-      border: 6px solid #ddd;
+      border: 6px solid #f3f3f3;
       border-top: 6px solid #0057e7;
       border-radius: 50%;
       width: 50px;
       height: 50px;
       animation: spin 1s linear infinite;
-      margin: 0 auto;
+      margin: 20px auto;
+      display: none;
     }
-
     @keyframes spin {
+      0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
   </style>
@@ -105,35 +79,27 @@
   <p>Tap “Scan NFC” and scan a player’s tag.</p>
   <button id="scanBtn">Scan NFC</button>
 
-  <!-- Loading Spinner -->
-  <div id="loading">
-    <div class="spinner"></div>
-    <p>Reading NFC...</p>
-  </div>
+  <div class="spinner" id="spinner"></div>
 
-  <!-- Result Display -->
   <div id="result" class="card" style="display:none;">
-    <div class="profile-box">
+    <div class="profile-container">
       <img id="profile" class="profile" src="" alt="Profile Picture">
-      <div class="info">
-        <h3 id="name"></h3>
-        <p><b>ID:</b> <span id="uid"></span></p>
-        <p>
-          <b>Nationality:</b> <span id="nat"></span>
-          <img id="flag" class="flag" src="" alt="Flag">
-        </p>
-        <p><b>Category:</b> <span id="cat"></span></p>
-        <p><b>Time:</b> <span id="time"></span></p>
-      </div>
+      <h3 id="name"></h3>
     </div>
+    <p>
+      <b>User ID:</b> <span id="uid"></span><br>
+      <b>Nationality:</b> <span id="nat"></span>
+      <img id="flag" class="flag" src="" alt="Flag"><br>
+      <b>Category:</b> <span id="cat"></span><br>
+      <b>Time:</b> <span id="time"></span>
+    </p>
     <p class="status" id="status"></p>
   </div>
 
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyDV5MkyTWQPOcgPtr079tHVafVuH1CuIU3CZoJKJXa67hdwOF4hF1lnP_HlZiLiEWh/exec";
     const scanBtn = document.getElementById('scanBtn');
-    const loadingDiv = document.getElementById('loading');
-    const resultDiv = document.getElementById('result');
+    const spinner = document.getElementById('spinner');
 
     let lastScanId = "";
     let lastScanTime = 0;
@@ -156,27 +122,25 @@
           const userId = decoder.decode(event.message.records[0].data).trim();
           const now = Date.now();
 
-          // Debounce: ignore same tag within 5 seconds
           if (userId === lastScanId && now - lastScanTime < 5000) return;
 
           lastScanId = userId;
           lastScanTime = now;
+          scanBtn.innerText = "Scan NFC";
+          scanBtn.disabled = false;
 
-          // Show spinner
-          resultDiv.style.display = "none";
-          loadingDiv.style.display = "block";
+          if (!userId) { alert("Empty NFC tag!"); return; }
 
-          if (!userId) {
-            alert("Empty NFC tag!");
-            resetUI();
-            return;
-          }
+          // Show loading spinner
+          spinner.style.display = "block";
+          document.getElementById("result").style.display = "none";
 
-          await getUserData(userId);
+          getUserData(userId);
         };
       } catch (err) {
         alert("NFC Scan Error: " + err);
-        resetUI();
+        scanBtn.innerText = "Scan NFC";
+        scanBtn.disabled = false;
       }
     }
 
@@ -185,21 +149,17 @@
         const res = await fetch(`${API_URL}?userId=${encodeURIComponent(userId)}`);
         const data = await res.json();
         showResult(data);
-      } catch (err) {
-        alert("Fetch error: " + err);
-        resetUI();
+      } catch (err) { 
+        alert("Fetch error: " + err); 
+      } finally {
+        spinner.style.display = "none";
       }
     }
 
     function showResult(data) {
-      loadingDiv.style.display = "none";
+      if (data.error) { alert(data.error); return; }
 
-      if (data.error) {
-        alert(data.error);
-        resetUI();
-        return;
-      }
-
+      const resultDiv = document.getElementById("result");
       resultDiv.style.display = "block";
       document.getElementById("name").innerText = data.name;
       document.getElementById("uid").innerText = data.id;
@@ -211,16 +171,13 @@
       document.getElementById("status").className = "status " + (data.status === "In" ? "in" : "out");
       document.getElementById("profile").src = data.profile || "";
 
-      // Auto-reset after 5 seconds
       if (resetTimer) clearTimeout(resetTimer);
-      resetTimer = setTimeout(resetUI, 5000);
-    }
-
-    function resetUI() {
-      scanBtn.innerText = "Scan NFC";
-      scanBtn.disabled = false;
-      loadingDiv.style.display = "none";
-      resultDiv.style.display = "none";
+      resetTimer = setTimeout(() => {
+        resultDiv.style.display = "none";
+        ["name","uid","nat","cat","time","status"].forEach(id=>document.getElementById(id).innerText="");
+        document.getElementById("flag").src = "";
+        document.getElementById("profile").src = "";
+      }, 5000);
     }
 
     scanBtn.addEventListener("click", startScan);
