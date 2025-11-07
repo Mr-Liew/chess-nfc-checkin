@@ -14,6 +14,7 @@
       height: 100vh;
       margin: 0;
     }
+
     .container {
       background: white;
       padding: 30px;
@@ -23,16 +24,19 @@
       max-width: 480px;
       text-align: left;
     }
+
     h2 {
       text-align: center;
       color: #003366;
       margin-top: 0;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
     }
+
     .loading {
       display: none;
       text-align: center;
     }
+
     .spinner {
       border: 5px solid #f3f3f3;
       border-top: 5px solid #0057e7;
@@ -42,15 +46,18 @@
       animation: spin 1s linear infinite;
       margin: 20px auto;
     }
+
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
     .profile-section {
       display: flex;
       align-items: center;
       gap: 15px;
     }
+
     .profile {
       width: 100px;
       height: 100px;
@@ -58,16 +65,19 @@
       object-fit: cover;
       border: 3px solid #0057e7;
     }
+
     .name {
       font-size: 1.5em;
       font-weight: bold;
       color: #003366;
     }
+
     .details {
       margin-top: 20px;
       font-size: 1.1em;
       color: #333;
     }
+
     .flag {
       width: 40px;
       height: 30px;
@@ -75,38 +85,21 @@
       margin-left: 8px;
       border-radius: 4px;
     }
+
     .status {
       text-align: center;
       font-size: 2em;
       font-weight: bold;
       margin-top: 20px;
     }
+
     .in { color: green; }
     .out { color: red; }
-    .manual-box {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-    input[type="text"] {
-      padding: 8px 10px;
-      font-size: 1.1em;
-      border: 2px solid #ccc;
-      border-radius: 8px;
-      width: 60%;
-      outline: none;
-    }
-    input[type="text"]:focus {
-      border-color: #0057e7;
-    }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>Commonwealth Chess Championship 2025</h2>
-
-    <div class="manual-box">
-      <input type="text" id="manualId" placeholder="Enter User ID & press Enter">
-    </div>
 
     <div class="loading" id="loading">
       <div class="spinner"></div>
@@ -133,35 +126,37 @@
 
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyDV5MkyTWQPOcgPtr079tHVafVuH1CuIU3CZoJKJXa67hdwOF4hF1lnP_HlZiLiEWh/exec";
+
     let lastScanId = "";
     let lastScanTime = 0;
     let resetTimer = null;
 
     window.addEventListener("load", () => {
-      if ("NDEFReader" in window) startAutoScan();
-      document.getElementById("manualId").addEventListener("keypress", e => {
-        if (e.key === "Enter") {
-          const id = e.target.value.trim();
-          if (id) getUserData(id);
-          e.target.value = "";
-        }
-      });
+      if ("NDEFReader" in window) {
+        startAutoScan();
+      } else {
+        alert("⚠️ Web NFC only works on Android Chrome browser.");
+      }
     });
 
     async function startAutoScan() {
       try {
         const ndef = new NDEFReader();
         await ndef.scan();
-        console.log("NFC ready. Waiting for tag...");
+        console.log("NFC ready. Waiting for scan...");
 
         ndef.onreading = async event => {
           const decoder = new TextDecoder();
           const userId = decoder.decode(event.message.records[0].data).trim();
           const now = Date.now();
-          if (userId === lastScanId && now - lastScanTime < 5000) return;
+
+          if (userId === lastScanId && now - lastScanTime < 5000) return; // prevent duplicates
+
           lastScanId = userId;
           lastScanTime = now;
+
           if (!userId) return;
+
           showLoading(true);
           await getUserData(userId);
         };
@@ -172,7 +167,6 @@
 
     async function getUserData(userId) {
       try {
-        showLoading(true);
         const res = await fetch(`${API_URL}?userId=${encodeURIComponent(userId)}`);
         const data = await res.json();
         showLoading(false);
@@ -190,8 +184,10 @@
 
     function showResult(data) {
       if (data.error) { alert(data.error); return; }
+
       const resultDiv = document.getElementById("result");
       resultDiv.style.display = "block";
+
       document.getElementById("profile").src = data.profile || "";
       document.getElementById("name").innerText = data.name;
       document.getElementById("uid").innerText = data.id;
@@ -203,7 +199,9 @@
       document.getElementById("status").className = "status " + (data.status === "In" ? "in" : "out");
 
       if (resetTimer) clearTimeout(resetTimer);
-      resetTimer = setTimeout(() => resultDiv.style.display = "none", 5000);
+      resetTimer = setTimeout(() => {
+        resultDiv.style.display = "none";
+      }, 5000);
     }
   </script>
 </body>
