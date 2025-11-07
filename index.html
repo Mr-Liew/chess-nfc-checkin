@@ -17,6 +17,7 @@
       margin: 0;
       text-align: center;
     }
+
     .container {
       background: rgba(255,255,255,0.1);
       padding: 30px;
@@ -25,12 +26,56 @@
       width: 350px;
       max-width: 90%;
       backdrop-filter: blur(8px);
+      position: relative;
     }
+
     h1 {
       font-size: 1.3em;
       margin-bottom: 15px;
       color: #ffd700;
     }
+
+    /* Permission box */
+    #permissionBox {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 20px;
+      z-index: 5;
+    }
+
+    #permissionBox h2 {
+      color: #ffd700;
+      margin-bottom: 10px;
+    }
+
+    #permissionBox p {
+      color: #ddd;
+      font-size: 0.9em;
+      margin-bottom: 15px;
+      width: 80%;
+    }
+
+    #permissionBox button {
+      padding: 10px 20px;
+      border: none;
+      background: #ffd700;
+      color: #00214d;
+      font-weight: bold;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    #permissionBox button:hover {
+      background: #ffcc00;
+    }
+
     .profile {
       display: flex;
       align-items: center;
@@ -38,6 +83,7 @@
       gap: 15px;
       margin-top: 15px;
     }
+
     .profile img {
       width: 80px;
       height: 80px;
@@ -45,18 +91,22 @@
       object-fit: cover;
       border: 3px solid #ffd700;
     }
+
     .details {
       text-align: left;
     }
+
     .details h2 {
       margin: 0;
       font-size: 1.2em;
       color: #fff;
     }
+
     .details p {
       margin: 3px 0;
       font-size: 0.95em;
     }
+
     .flag {
       width: 40px;
       height: 25px;
@@ -64,10 +114,12 @@
       object-fit: cover;
       margin-top: 5px;
     }
+
     #loading {
       display: none;
       margin-top: 15px;
     }
+
     .spinner {
       border: 5px solid rgba(255,255,255,0.3);
       border-top: 5px solid #ffd700;
@@ -77,17 +129,21 @@
       animation: spin 1s linear infinite;
       margin: 0 auto;
     }
+
     @keyframes spin {
       100% { transform: rotate(360deg); }
     }
+
     .status {
       margin-top: 10px;
       font-weight: bold;
       font-size: 1.1em;
     }
+
     #manualBox {
       margin-top: 15px;
     }
+
     input {
       padding: 8px;
       border-radius: 6px;
@@ -95,6 +151,7 @@
       width: 80%;
       text-align: center;
     }
+
     button {
       padding: 10px 16px;
       border-radius: 8px;
@@ -105,6 +162,7 @@
       cursor: pointer;
       margin-top: 8px;
     }
+
     button:hover {
       background: #ffcc00;
     }
@@ -114,10 +172,14 @@
   <div class="container">
     <h1>🏆 Commonwealth Chess Championship 2025</h1>
 
-    <!-- NFC Permission -->
-    <div id="startup">
-      <button onclick="startPermission()">▶️ Enable NFC Scanning</button>
-      <p style="font-size:0.9em;">Tap once to allow NFC access</p>
+    <!-- NFC Permission Box -->
+    <div id="permissionBox">
+      <h2>🔐 NFC Permission Required</h2>
+      <p>
+        This app needs access to your device’s NFC to read player IDs.
+        Please tap the button below and allow access when prompted.
+      </p>
+      <button onclick="startPermission()">Allow NFC Access</button>
     </div>
 
     <!-- Loading Spinner -->
@@ -126,7 +188,7 @@
       <p>Reading NFC...</p>
     </div>
 
-    <!-- User Display -->
+    <!-- Result Display -->
     <div id="result" style="display:none;">
       <div class="profile">
         <img id="profilePic" src="" alt="Profile">
@@ -141,7 +203,7 @@
       <p id="time"></p>
     </div>
 
-    <!-- Manual Input -->
+    <!-- Manual Input Box -->
     <div id="manualBox">
       <p style="margin-top:15px;">Or enter User ID manually:</p>
       <input type="text" id="manualId" placeholder="Enter User ID">
@@ -158,25 +220,31 @@
         return;
       }
 
-      document.getElementById("startup").style.display = "none";
-      await startAutoScan();
-    }
+      const box = document.getElementById("permissionBox");
+      box.innerHTML = "<div class='spinner'></div><p>Requesting NFC Permission...</p>";
 
-    async function startAutoScan() {
       try {
         const reader = new NDEFReader();
         await reader.scan();
         scanning = true;
         console.log("NFC scan started");
 
+        // Hide permission box
+        box.style.display = "none";
+
         reader.onreading = event => {
           const decoder = new TextDecoder();
           const userId = decoder.decode(event.message.records[0].data).trim();
           if (userId) getUserData(userId);
         };
+
       } catch (err) {
         console.error("NFC Scan Error:", err);
-        alert("Error starting NFC scan: " + err.message);
+        box.innerHTML = `
+          <h2>❌ NFC Access Denied</h2>
+          <p>Permission was not granted. Please allow NFC access in your browser settings and tap the button below to try again.</p>
+          <button onclick="startPermission()">Retry</button>
+        `;
       }
     }
 
@@ -218,10 +286,10 @@
 
       setTimeout(() => {
         result.style.display = "none";
-      }, 5000); // Auto reset display after 5s
+      }, 5000);
     }
 
-    // Manual typing fallback
+    // Manual entry fallback
     window.addEventListener("load", () => {
       document.getElementById("manualId").addEventListener("keypress", e => {
         if (e.key === "Enter") {
