@@ -1,131 +1,96 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Commonwealth Chess Championship 2025</title>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #00214d, #004aad);
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
+      font-family: 'Segoe UI', Arial;
       text-align: center;
-    }
-
-    .container {
-      background: rgba(255,255,255,0.1);
+      background: #eef3fb;
       padding: 30px;
-      border-radius: 20px;
-      box-shadow: 0 0 25px rgba(0,0,0,0.3);
-      width: 350px;
-      max-width: 90%;
-      backdrop-filter: blur(8px);
-      position: relative;
     }
+    h2 { color: #003366; margin-bottom: 10px; }
 
-    h1 {
-      font-size: 1.3em;
-      margin-bottom: 15px;
-      color: #ffd700;
-    }
-
-    /* Permission box */
-    #permissionBox {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.8);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      border-radius: 20px;
-      z-index: 5;
-    }
-
-    #permissionBox h2 {
-      color: #ffd700;
-      margin-bottom: 10px;
-    }
-
-    #permissionBox p {
-      color: #ddd;
-      font-size: 0.9em;
-      margin-bottom: 15px;
-      width: 80%;
-    }
-
-    #permissionBox button {
-      padding: 10px 20px;
-      border: none;
-      background: #ffd700;
-      color: #00214d;
-      font-weight: bold;
+    button {
+      padding: 14px 28px;
+      font-size: 1.1em;
       border-radius: 10px;
+      border: none;
+      background: #0057e7;
+      color: white;
       cursor: pointer;
+      margin-top: 20px;
     }
+    button:disabled { background: #ccc; cursor: not-allowed; }
 
-    #permissionBox button:hover {
-      background: #ffcc00;
-    }
-
-    .profile {
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 15px;
-      margin-top: 15px;
-    }
-
-    .profile img {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 3px solid #ffd700;
-    }
-
-    .details {
+    .card {
+      margin-top: 25px;
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      display: inline-block;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      min-width: 340px;
       text-align: left;
     }
 
-    .details h2 {
-      margin: 0;
-      font-size: 1.2em;
-      color: #fff;
+    .profile-box {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 20px;
     }
 
-    .details p {
-      margin: 3px 0;
+    .profile {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #0057e7;
+    }
+
+    .info h3 {
+      margin: 0;
+      color: #003366;
+    }
+
+    .info p {
+      margin: 4px 0;
       font-size: 0.95em;
+      color: #333;
     }
 
     .flag {
       width: 40px;
-      height: 25px;
+      height: 30px;
+      vertical-align: middle;
+      margin-left: 8px;
       border-radius: 4px;
-      object-fit: cover;
-      margin-top: 5px;
     }
 
+    .status {
+      font-size: 2em;
+      font-weight: bold;
+      margin-top: 15px;
+      text-align: center;
+    }
+
+    .in { color: green; }
+    .out { color: red; }
+
+    /* Loading spinner */
     #loading {
       display: none;
-      margin-top: 15px;
+      margin-top: 30px;
     }
 
     .spinner {
-      border: 5px solid rgba(255,255,255,0.3);
-      border-top: 5px solid #ffd700;
+      border: 6px solid #ddd;
+      border-top: 6px solid #0057e7;
       border-radius: 50%;
-      width: 40px;
-      height: 40px;
+      width: 50px;
+      height: 50px;
       animation: spin 1s linear infinite;
       margin: 0 auto;
     }
@@ -133,172 +98,132 @@
     @keyframes spin {
       100% { transform: rotate(360deg); }
     }
-
-    .status {
-      margin-top: 10px;
-      font-weight: bold;
-      font-size: 1.1em;
-    }
-
-    #manualBox {
-      margin-top: 15px;
-    }
-
-    input {
-      padding: 8px;
-      border-radius: 6px;
-      border: none;
-      width: 80%;
-      text-align: center;
-    }
-
-    button {
-      padding: 10px 16px;
-      border-radius: 8px;
-      border: none;
-      background: #ffd700;
-      color: #00214d;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 8px;
-    }
-
-    button:hover {
-      background: #ffcc00;
-    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🏆 Commonwealth Chess Championship 2025</h1>
+  <h2>Commonwealth Chess Championship 2025</h2>
+  <p>Tap “Scan NFC” and scan a player’s tag.</p>
+  <button id="scanBtn">Scan NFC</button>
 
-    <!-- NFC Permission Box -->
-    <div id="permissionBox">
-      <h2>🔐 NFC Permission Required</h2>
-      <p>
-        This app needs access to your device’s NFC to read player IDs.
-        Please tap the button below and allow access when prompted.
-      </p>
-      <button onclick="startPermission()">Allow NFC Access</button>
-    </div>
+  <!-- Loading Spinner -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <p>Reading NFC...</p>
+  </div>
 
-    <!-- Loading Spinner -->
-    <div id="loading">
-      <div class="spinner"></div>
-      <p>Reading NFC...</p>
-    </div>
-
-    <!-- Result Display -->
-    <div id="result" style="display:none;">
-      <div class="profile">
-        <img id="profilePic" src="" alt="Profile">
-        <div class="details">
-          <h2 id="name"></h2>
-          <p><b>ID:</b> <span id="userId"></span></p>
-          <p><b>Category:</b> <span id="category"></span></p>
+  <!-- Result Display -->
+  <div id="result" class="card" style="display:none;">
+    <div class="profile-box">
+      <img id="profile" class="profile" src="" alt="Profile Picture">
+      <div class="info">
+        <h3 id="name"></h3>
+        <p><b>ID:</b> <span id="uid"></span></p>
+        <p>
+          <b>Nationality:</b> <span id="nat"></span>
           <img id="flag" class="flag" src="" alt="Flag">
-        </div>
+        </p>
+        <p><b>Category:</b> <span id="cat"></span></p>
+        <p><b>Time:</b> <span id="time"></span></p>
       </div>
-      <p class="status" id="status"></p>
-      <p id="time"></p>
     </div>
-
-    <!-- Manual Input Box -->
-    <div id="manualBox">
-      <p style="margin-top:15px;">Or enter User ID manually:</p>
-      <input type="text" id="manualId" placeholder="Enter User ID">
-    </div>
+    <p class="status" id="status"></p>
   </div>
 
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyDV5MkyTWQPOcgPtr079tHVafVuH1CuIU3CZoJKJXa67hdwOF4hF1lnP_HlZiLiEWh/exec";
-    let scanning = false;
+    const scanBtn = document.getElementById('scanBtn');
+    const loadingDiv = document.getElementById('loading');
+    const resultDiv = document.getElementById('result');
 
-    async function startPermission() {
+    let lastScanId = "";
+    let lastScanTime = 0;
+    let resetTimer = null;
+
+    async function startScan() {
       if (!("NDEFReader" in window)) {
-        alert("⚠️ Web NFC only works on Android Chrome browser.");
+        alert("⚠️ Web NFC is only supported on Android Chrome.");
         return;
       }
 
-      const box = document.getElementById("permissionBox");
-      box.innerHTML = "<div class='spinner'></div><p>Requesting NFC Permission...</p>";
-
       try {
-        const reader = new NDEFReader();
-        await reader.scan();
-        scanning = true;
-        console.log("NFC scan started");
+        const ndef = new NDEFReader();
+        await ndef.scan();
+        scanBtn.innerText = "Scanning...";
+        scanBtn.disabled = true;
 
-        // Hide permission box
-        box.style.display = "none";
-
-        reader.onreading = event => {
+        ndef.onreading = async event => {
           const decoder = new TextDecoder();
           const userId = decoder.decode(event.message.records[0].data).trim();
-          if (userId) getUserData(userId);
-        };
+          const now = Date.now();
 
+          // Debounce: ignore same tag within 5 seconds
+          if (userId === lastScanId && now - lastScanTime < 5000) return;
+
+          lastScanId = userId;
+          lastScanTime = now;
+
+          // Show spinner
+          resultDiv.style.display = "none";
+          loadingDiv.style.display = "block";
+
+          if (!userId) {
+            alert("Empty NFC tag!");
+            resetUI();
+            return;
+          }
+
+          await getUserData(userId);
+        };
       } catch (err) {
-        console.error("NFC Scan Error:", err);
-        box.innerHTML = `
-          <h2>❌ NFC Access Denied</h2>
-          <p>Permission was not granted. Please allow NFC access in your browser settings and tap the button below to try again.</p>
-          <button onclick="startPermission()">Retry</button>
-        `;
+        alert("NFC Scan Error: " + err);
+        resetUI();
       }
     }
 
     async function getUserData(userId) {
-      document.getElementById("result").style.display = "none";
-      document.getElementById("loading").style.display = "block";
-
       try {
-        const res = await fetch(`${API_URL}?userId=${userId}`);
+        const res = await fetch(`${API_URL}?userId=${encodeURIComponent(userId)}`);
         const data = await res.json();
-
-        if (data.success) {
-          displayData(data);
-        } else {
-          alert("❌ User not found!");
-        }
+        showResult(data);
       } catch (err) {
-        alert("⚠️ Network error or slow connection!");
-      } finally {
-        document.getElementById("loading").style.display = "none";
+        alert("Fetch error: " + err);
+        resetUI();
       }
     }
 
-    function displayData(data) {
-      const now = new Date();
-      const timeString = now.toLocaleTimeString("en-GB", { hour12: false });
-      const result = document.getElementById("result");
-      result.style.display = "block";
+    function showResult(data) {
+      loadingDiv.style.display = "none";
 
-      document.getElementById("profilePic").src = data.profilePic || "";
-      document.getElementById("name").textContent = data.name || "Unknown";
-      document.getElementById("userId").textContent = data.userId || "-";
-      document.getElementById("category").textContent = data.category || "-";
+      if (data.error) {
+        alert(data.error);
+        resetUI();
+        return;
+      }
+
+      resultDiv.style.display = "block";
+      document.getElementById("name").innerText = data.name;
+      document.getElementById("uid").innerText = data.id;
+      document.getElementById("nat").innerText = data.nationality;
       document.getElementById("flag").src = data.flag || "";
+      document.getElementById("cat").innerText = data.category;
+      document.getElementById("time").innerText = data.time;
+      document.getElementById("status").innerText = data.status;
+      document.getElementById("status").className = "status " + (data.status === "In" ? "in" : "out");
+      document.getElementById("profile").src = data.profile || "";
 
-      document.getElementById("status").textContent = `Status: ${data.status}`;
-      document.getElementById("status").style.color = data.status === "In" ? "#00ff90" : "#ff6961";
-      document.getElementById("time").textContent = `Time: ${timeString}`;
-
-      setTimeout(() => {
-        result.style.display = "none";
-      }, 5000);
+      // Auto-reset after 5 seconds
+      if (resetTimer) clearTimeout(resetTimer);
+      resetTimer = setTimeout(resetUI, 5000);
     }
 
-    // Manual entry fallback
-    window.addEventListener("load", () => {
-      document.getElementById("manualId").addEventListener("keypress", e => {
-        if (e.key === "Enter") {
-          const id = e.target.value.trim();
-          if (id) getUserData(id);
-          e.target.value = "";
-        }
-      });
-    });
+    function resetUI() {
+      scanBtn.innerText = "Scan NFC";
+      scanBtn.disabled = false;
+      loadingDiv.style.display = "none";
+      resultDiv.style.display = "none";
+    }
+
+    scanBtn.addEventListener("click", startScan);
   </script>
 </body>
 </html>
