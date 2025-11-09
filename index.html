@@ -73,6 +73,8 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
+    /* Logo */
     .logo {
       width: 120px;
       margin-bottom: 15px;
@@ -81,7 +83,7 @@
 </head>
 <body>
   <!-- 🏆 App Logo -->
-  <img class="logo" src="https://upload.wikimedia.org/wikipedia/commons/7/7a/Chess_piece_-_White_king.jpg" alt="App Logo">
+  <img class="logo" src="https://i.postimg.cc/fLf608pp/Asset-1-2x-Copy.png" alt="App Logo">
 
   <h2>Commonwealth Chess Championship 2025</h2>
   <p>Tap “Scan NFC” and scan a player’s tag.</p>
@@ -181,9 +183,12 @@
       document.getElementById("status").className = "status " + (data.status === "In" ? "in" : "out");
       document.getElementById("profile").src = data.profile || "";
 
-      // show duration only when "Out" (in minutes and seconds)
-      document.getElementById("duration").innerText =
-        data.status === "Out" && data.duration ? `Duration: ${data.duration}` : "";
+      // Show duration only when "Out"
+      if (data.status === "Out" && data.duration) {
+        document.getElementById("duration").innerText = `Duration: ${data.duration}`;
+      } else {
+        document.getElementById("duration").innerText = "";
+      }
 
       // Auto-reset after 5 seconds
       if (resetTimer) clearTimeout(resetTimer);
