@@ -137,79 +137,80 @@
     <p id="duration" style="text-align:center; font-size:1.1em; color:#333;"></p>
   </div>
 
-  <script>
-    document.getElementById("scanBtn").addEventListener("click", async () => {
-      if (!("NDEFReader" in window)) {
-        alert("Your device does not support NFC scanning.");
-        return;
-      }
-
-      const spinner = document.getElementById("spinner");
-      const resultCard = document.getElementById("result");
-
-      try {
-        const ndef = new NDEFReader();
-        await ndef.scan();
-        spinner.style.display = "block";
-        resultCard.style.display = "none";
-
-        ndef.onreading = async (event) => {
-          const decoder = new TextDecoder();
-          let userId = "";
-
-          for (const record of event.message.records) {
-            userId = decoder.decode(record.data);
-          }
-
-          if (!userId) {
-            alert("No user ID found in tag!");
-            spinner.style.display = "none";
-            return;
-          }
-
-          const url = `https://script.google.com/macros/s/AKfycbzIcU_YeFv2wsZznNFWKrRkwBBeUHCfU47XUMbM3kD5BbiStBAWqgPtBhvytNUYpD_q/exec?userId=${userId}`;
-
-          const response = await fetch(url);
-          const data = await response.json();
-
-          spinner.style.display = "none";
-
-          if (data.error) {
-            alert(data.error);
-            return;
-          }
-
-          showResult(data);
-        };
-      } catch (error) {
-        console.error(error);
-        alert("Error: " + error.message);
-        spinner.style.display = "none";
-      }
-    });
-
-    function showResult(data) {
-      const card = document.getElementById("result");
-      document.getElementById("name").innerHTML =
-        `${data.name} <img src="${data.flag}" class="flag">`;
-      document.getElementById("category").innerText = data.category;
-      document.getElementById("nationality").innerText = data.nationality;
-      document.getElementById("status").innerText = data.status;
-      document.getElementById("status").className = "status " + (data.status === "In" ? "in" : "out");
-      document.getElementById("profile").src = data.profile || "";
-
-      document.getElementById("duration").innerText =
-        data.status === "Out" && data.duration ? `Duration: ${data.duration}` : "";
-
-      card.style.display = "block";
-
-      // auto-hide after 5 seconds
-      setTimeout(() => {
-        card.style.display = "none";
-        document.getElementById("duration").innerText = "";
-      }, 5000);
+ <script>
+  document.getElementById("scanBtn").addEventListener("click", async () => {
+    if (!("NDEFReader" in window)) {
+      alert("Your device does not support NFC scanning.");
+      return;
     }
-  </script>
+
+    const spinner = document.getElementById("spinner");
+    const resultCard = document.getElementById("result");
+
+    try {
+      const ndef = new NDEFReader();
+      await ndef.scan();
+
+      resultCard.style.display = "none"; // hide result, spinner will appear later
+
+      ndef.onreading = async (event) => {
+        spinner.style.display = "block"; // show spinner only when NFC tag detected
+        const decoder = new TextDecoder();
+        let userId = "";
+
+        for (const record of event.message.records) {
+          userId = decoder.decode(record.data);
+        }
+
+        if (!userId) {
+          alert("No user ID found in tag!");
+          spinner.style.display = "none";
+          return;
+        }
+
+        const url = `https://script.google.com/macros/s/AKfycbzIcU_YeFv2wsZznNFWKrRkwBBeUHCfU47XUMbM3kD5BbiStBAWqgPtBhvytNUYpD_q/exec?userId=${userId}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        spinner.style.display = "none";
+
+        if (data.error) {
+          alert(data.error);
+          return;
+        }
+
+        showResult(data);
+      };
+    } catch (error) {
+      console.error(error);
+      alert("Error: " + error.message);
+      spinner.style.display = "none";
+    }
+  });
+
+  function showResult(data) {
+    const card = document.getElementById("result");
+    document.getElementById("name").innerHTML =
+      `${data.name} <img src="${data.flag}" class="flag">`;
+    document.getElementById("category").innerText = data.category;
+    document.getElementById("nationality").innerText = data.nationality;
+    document.getElementById("status").innerText = data.status;
+    document.getElementById("status").className =
+      "status " + (data.status === "In" ? "in" : "out");
+    document.getElementById("profile").src = data.profile || "";
+
+    document.getElementById("duration").innerText =
+      data.status === "Out" && data.duration ? `Duration: ${data.duration}` : "";
+
+    card.style.display = "block";
+
+    setTimeout(() => {
+      card.style.display = "none";
+      document.getElementById("duration").innerText = "";
+    }, 5000);
+  }
+</script>
+
 
 </body>
 </html>
