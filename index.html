@@ -110,6 +110,7 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbyDV5MkyTWQPOcgPtr079tHVafVuH1CuIU3CZoJKJXa67hdwOF4hF1lnP_HlZiLiEWh/exec";
     const scanBtn = document.getElementById('scanBtn');
     const spinner = document.getElementById('spinner');
+    const resultDiv = document.getElementById('result');
 
     let lastScanId = "";
     let lastScanTime = 0;
@@ -132,7 +133,6 @@
           const userId = decoder.decode(event.message.records[0].data).trim();
           const now = Date.now();
 
-          // Debounce: ignore same tag within 5 seconds
           if (userId === lastScanId && now - lastScanTime < 5000) return;
 
           lastScanId = userId;
@@ -142,9 +142,8 @@
 
           if (!userId) { alert("Empty NFC tag!"); return; }
 
-          // Show loading spinner
           spinner.style.display = "block";
-          document.getElementById("result").style.display = "none";
+          resultDiv.style.display = "none";
 
           getUserData(userId);
         };
@@ -170,7 +169,6 @@
     function showResult(data) {
       if (data.error) { alert(data.error); return; }
 
-      const resultDiv = document.getElementById("result");
       resultDiv.style.display = "block";
       document.getElementById("name").innerText = data.name;
       document.getElementById("uid").innerText = data.id;
@@ -182,11 +180,21 @@
       document.getElementById("status").className = "status " + (data.status === "In" ? "in" : "out");
       document.getElementById("profile").src = data.profile || "";
 
-      // Show duration only when "Out"
+      // Duration display (minutes & seconds, seconds only if < 1 min)
       if (data.status === "Out" && data.duration) {
         document.getElementById("duration").innerText = `Duration: ${data.duration}`;
+
+        // Check if duration > 5 minutes
+        const durationParts = data.duration.split(/[ms ]/).filter(Boolean);
+        const minutes = parseInt(durationParts[0]) || 0;
+        if (minutes >= 5) {
+          resultDiv.style.background = "#ffcccc"; // light red
+        } else {
+          resultDiv.style.background = "white";
+        }
       } else {
         document.getElementById("duration").innerText = "";
+        resultDiv.style.background = "white";
       }
 
       // Auto-reset after 5 seconds
@@ -197,6 +205,7 @@
         document.getElementById("flag").src = "";
         document.getElementById("profile").src = "";
         document.getElementById("duration").innerText = "";
+        resultDiv.style.background = "white";
       }, 5000);
     }
 
